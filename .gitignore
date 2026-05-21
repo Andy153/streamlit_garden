@@ -1,0 +1,16 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+
+# Credentials & secrets
+.env
+*.json
+
+# macOS
+.DS_Store
+
+# Claude Code
+.claude/
+agent-skills/
