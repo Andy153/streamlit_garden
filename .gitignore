@@ -7,6 +7,7 @@ __pycache__/
 # Credentials & secrets
 .env
 *.json
+streamlit_secret.toml
 
 # macOS
 .DS_Store
