@@ -1,44 +1,51 @@
 """Per-brand configuration: dataset, colors, model SQL mapping."""
 from __future__ import annotations
 
+# Shared null/empty guard — added at the top of every CASE block
+_NULL_CLAUSE = "WHEN model_requested IS NULL OR UPPER(TRIM(model_requested)) IN ('', 'NULL') THEN 'Sin modelo'"
+
 # ── KIA ───────────────────────────────────────────────────────────────────────
-_KIA_MODEL_SQL = """
+_KIA_MODEL_SQL = f"""
 CASE
-    WHEN UPPER(TRIM(model_requested)) IN ('', 'NULL', 'KIA') OR model_requested IS NULL THEN 'Otros'
-    WHEN UPPER(TRIM(model_requested)) = 'SOLUTO'                                        THEN 'SOLUTO'
-    WHEN UPPER(TRIM(model_requested)) IN ('K3-SEDAN', 'K3 SEDAN', 'K3SEDAN')           THEN 'K3 SEDAN'
-    WHEN UPPER(TRIM(model_requested)) IN ('K3-CROSS', 'K3 CROSS', 'K3CROSS')           THEN 'K3 CROSS'
-    WHEN UPPER(TRIM(model_requested)) = 'CARNIVAL HEV'                                 THEN 'CARNIVAL HEV'
-    WHEN UPPER(TRIM(model_requested)) IN ('SONET PE', 'SONET')                         THEN 'SONET PE'
-    WHEN UPPER(TRIM(model_requested)) IN ('SELTOS PE', 'SELTOS')                       THEN 'SELTOS PE'
-    WHEN UPPER(TRIM(model_requested)) IN ('NEW CARENS', 'CARENS')                      THEN 'NEW CARENS'
+    {_NULL_CLAUSE}
+    WHEN UPPER(TRIM(model_requested)) = 'KIA'                                          THEN 'Sin modelo'
+    WHEN UPPER(TRIM(model_requested)) = 'PICANTO'                                      THEN 'PICANTO'
+    WHEN UPPER(TRIM(model_requested)) = 'SOLUTO'                                       THEN 'SOLUTO'
+    WHEN UPPER(TRIM(model_requested)) IN ('K3-SEDAN', 'K3 SEDAN', 'K3SEDAN')          THEN 'K3 SEDAN'
+    WHEN UPPER(TRIM(model_requested)) IN ('K3-CROSS', 'K3 CROSS', 'K3CROSS')          THEN 'K3 CROSS'
+    WHEN UPPER(TRIM(model_requested)) = 'CARNIVAL HEV'                                THEN 'CARNIVAL HEV'
+    WHEN UPPER(TRIM(model_requested)) IN ('SONET PE', 'SONET')                        THEN 'SONET PE'
+    WHEN UPPER(TRIM(model_requested)) IN ('SELTOS PE', 'SELTOS')                      THEN 'SELTOS PE'
+    WHEN UPPER(TRIM(model_requested)) IN ('NEW CARENS', 'CARENS')                     THEN 'NEW CARENS'
     WHEN UPPER(TRIM(model_requested)) IN ('SPORTAGE PE HEV', 'SPORTAGE HEV', 'SPORTAGE PE', 'SPORTAGE') THEN 'SPORTAGE PE HEV'
     WHEN UPPER(TRIM(model_requested)) IN ('SORENTO HEV', 'SORRENTO HEV', 'SORENTO', 'SORRENTO')         THEN 'SORENTO HEV'
-    WHEN UPPER(TRIM(model_requested)) = 'EV5'                                          THEN 'EV5'
-    WHEN UPPER(TRIM(model_requested)) = 'K2700'                                        THEN 'K2700'
-    WHEN UPPER(TRIM(model_requested)) = 'TASMAN'                                       THEN 'TASMAN'
+    WHEN UPPER(TRIM(model_requested)) = 'EV5'                                         THEN 'EV5'
+    WHEN UPPER(TRIM(model_requested)) = 'K2700'                                       THEN 'K2700'
+    WHEN UPPER(TRIM(model_requested)) = 'TASMAN'                                      THEN 'TASMAN'
     ELSE 'Otros'
 END
 """
 
 # ── Nissan ────────────────────────────────────────────────────────────────────
-_NISSAN_MODEL_SQL = """
+_NISSAN_MODEL_SQL = f"""
 CASE
-    WHEN UPPER(TRIM(model_requested)) = 'SENTRA'                                        THEN 'SENTRA'
-    WHEN UPPER(TRIM(model_requested)) = 'PATHFINDER'                                    THEN 'PATHFINDER'
-    WHEN UPPER(TRIM(model_requested)) = 'KICKS'                                         THEN 'KICKS'
-    WHEN UPPER(TRIM(model_requested)) = 'QASHQAI'                                       THEN 'QASHQAI'
-    WHEN UPPER(TRIM(model_requested)) IN ('X-TRAIL ICE', 'X TRAIL ICE', 'XTRAIL ICE')  THEN 'X-TRAIL ICE'
+    {_NULL_CLAUSE}
+    WHEN UPPER(TRIM(model_requested)) = 'SENTRA'                                       THEN 'SENTRA'
+    WHEN UPPER(TRIM(model_requested)) = 'PATHFINDER'                                   THEN 'PATHFINDER'
+    WHEN UPPER(TRIM(model_requested)) = 'KICKS'                                        THEN 'KICKS'
+    WHEN UPPER(TRIM(model_requested)) = 'QASHQAI'                                      THEN 'QASHQAI'
+    WHEN UPPER(TRIM(model_requested)) IN ('X-TRAIL ICE', 'X TRAIL ICE', 'XTRAIL ICE') THEN 'X-TRAIL ICE'
     WHEN UPPER(TRIM(model_requested)) IN ('X-TRAIL E', 'X TRAIL E', 'XTRAIL E', 'X-TRAIL EV') THEN 'X-TRAIL e'
-    WHEN UPPER(TRIM(model_requested)) = 'FRONTIER'                                      THEN 'FRONTIER'
-    WHEN UPPER(TRIM(model_requested)) = 'KAIT'                                          THEN 'KAIT'
+    WHEN UPPER(TRIM(model_requested)) = 'FRONTIER'                                     THEN 'FRONTIER'
+    WHEN UPPER(TRIM(model_requested)) = 'KAIT'                                         THEN 'KAIT'
     ELSE 'Otros'
 END
 """
 
 # ── Fiat ──────────────────────────────────────────────────────────────────────
-_FIAT_MODEL_SQL = """
+_FIAT_MODEL_SQL = f"""
 CASE
+    {_NULL_CLAUSE}
     WHEN UPPER(TRIM(model_requested)) = 'MOBI'     THEN 'MOBI'
     WHEN UPPER(TRIM(model_requested)) = 'ARGO'     THEN 'ARGO'
     WHEN UPPER(TRIM(model_requested)) = 'PULSE'    THEN 'PULSE'
@@ -51,10 +58,11 @@ END
 """
 
 # ── Jeep + RAM (mismo dataset) ────────────────────────────────────────────────
-_JEEP_MODEL_SQL = """
+_JEEP_MODEL_SQL = f"""
 CASE
-    WHEN UPPER(TRIM(model_requested)) IN ('1500 RHO', 'RAM 1500 RHO', 'RAM1500 RHO')       THEN '1500 RHO'
-    WHEN UPPER(TRIM(model_requested)) IN ('1500 REBEL', 'RAM 1500 REBEL', 'RAM1500 REBEL') THEN '1500 REBEL'
+    {_NULL_CLAUSE}
+    WHEN UPPER(TRIM(model_requested)) IN ('1500 RHO', 'RAM 1500 RHO', 'RAM1500 RHO')        THEN '1500 RHO'
+    WHEN UPPER(TRIM(model_requested)) IN ('1500 REBEL', 'RAM 1500 REBEL', 'RAM1500 REBEL')  THEN '1500 REBEL'
     WHEN UPPER(TRIM(model_requested)) = 'RAMPAGE'   THEN 'RAMPAGE'
     WHEN UPPER(TRIM(model_requested)) = 'WRANGLER'  THEN 'WRANGLER'
     WHEN UPPER(TRIM(model_requested)) = 'COMPASS'   THEN 'COMPASS'
@@ -64,8 +72,9 @@ END
 """
 
 # ── Chery ─────────────────────────────────────────────────────────────────────
-_CHERY_MODEL_SQL = """
+_CHERY_MODEL_SQL = f"""
 CASE
+    {_NULL_CLAUSE}
     WHEN UPPER(TRIM(model_requested)) = 'T2'    THEN 'T2'
     WHEN UPPER(TRIM(model_requested)) = 'T4'    THEN 'T4'
     WHEN UPPER(TRIM(model_requested)) = 'T7'    THEN 'T7'
@@ -79,10 +88,24 @@ CASE
 END
 """
 
-# ── MINI ─────────────────────────────────────────────────────────────────────
-# Ordered most-specific → least-specific to avoid partial overlaps
-_MINI_MODEL_SQL = """
+# ── Mazda ─────────────────────────────────────────────────────────────────────
+_MAZDA_MODEL_SQL = f"""
 CASE
+    {_NULL_CLAUSE}
+    WHEN UPPER(TRIM(model_requested)) IN ('CX-30', 'CX30', 'CX 30') THEN 'CX-30'
+    WHEN UPPER(TRIM(model_requested)) IN ('CX-5',  'CX5',  'CX 5')  THEN 'CX-5'
+    WHEN UPPER(TRIM(model_requested)) IN ('CX-60', 'CX60', 'CX 60') THEN 'CX-60'
+    WHEN UPPER(TRIM(model_requested)) IN ('CX-90', 'CX90', 'CX 90') THEN 'CX-90'
+    WHEN UPPER(TRIM(model_requested)) IN ('BT-50', 'BT50', 'BT 50') THEN 'BT-50'
+    ELSE 'Otros'
+END
+"""
+
+# ── MINI ──────────────────────────────────────────────────────────────────────
+# Ordered most-specific → least-specific to avoid partial overlaps
+_MINI_MODEL_SQL = f"""
+CASE
+    {_NULL_CLAUSE}
     WHEN UPPER(TRIM(model_requested)) LIKE '%COUNTRYMAN C%'      THEN 'MINI COUNTRYMAN C'
     WHEN UPPER(TRIM(model_requested)) LIKE '%JCW HATCH%'         THEN 'MINI COOPER JCW HATCH'
     WHEN UPPER(TRIM(model_requested)) LIKE '%COOPER C FAVOURED%' THEN 'MINI COOPER C FAVOURED'
@@ -99,8 +122,9 @@ END
 
 # ── BMW Motorrad ──────────────────────────────────────────────────────────────
 # Ordered most-specific → least-specific (ADV before GS, GS before base)
-_BMW_MODEL_SQL = """
+_BMW_MODEL_SQL = f"""
 CASE
+    {_NULL_CLAUSE}
     WHEN UPPER(TRIM(model_requested)) LIKE '%R 1300 GS ADV%' OR UPPER(TRIM(model_requested)) LIKE '%R1300 GS ADV%' THEN 'R 1300 GS ADV'
     WHEN UPPER(TRIM(model_requested)) LIKE '%R 1300 GS%'     OR UPPER(TRIM(model_requested)) LIKE '%R1300 GS%'     THEN 'R 1300 GS'
     WHEN UPPER(TRIM(model_requested)) LIKE '%F 900 GS%'      OR UPPER(TRIM(model_requested)) LIKE '%F900 GS%'      THEN 'F 900 GS'
@@ -117,48 +141,43 @@ END
 """
 
 # ── Chevrolet ─────────────────────────────────────────────────────────────────
-_CHEVROLET_MODEL_SQL = """
+_CHEVROLET_MODEL_SQL = f"""
 CASE
-    WHEN UPPER(TRIM(model_requested)) = 'SPARK'                                  THEN 'SPARK'
-    WHEN UPPER(TRIM(model_requested)) IN ('ONIX PLUS', 'ONIX+', 'ONIX SEDAN')   THEN 'ONIX PLUS'
-    WHEN UPPER(TRIM(model_requested)) = 'ONIX'                                   THEN 'ONIX'
-    WHEN UPPER(TRIM(model_requested)) = 'TRACKER'                                THEN 'TRACKER'
-    WHEN UPPER(TRIM(model_requested)) = 'MONTANA'                                THEN 'MONTANA'
-    WHEN UPPER(TRIM(model_requested)) = 'S10'                                    THEN 'S10'
-    WHEN UPPER(TRIM(model_requested)) = 'TRAILBLAZER'                            THEN 'TRAILBLAZER'
-    WHEN UPPER(TRIM(model_requested)) = 'SILVERADO'                              THEN 'SILVERADO'
-    WHEN UPPER(TRIM(model_requested)) = 'CAPTIVA'                                THEN 'CAPTIVA'
+    {_NULL_CLAUSE}
+    WHEN UPPER(TRIM(model_requested)) = 'SPARK'                                 THEN 'SPARK'
+    WHEN UPPER(TRIM(model_requested)) IN ('ONIX PLUS', 'ONIX+', 'ONIX SEDAN')  THEN 'ONIX PLUS'
+    WHEN UPPER(TRIM(model_requested)) = 'ONIX'                                  THEN 'ONIX'
+    WHEN UPPER(TRIM(model_requested)) = 'TRACKER'                               THEN 'TRACKER'
+    WHEN UPPER(TRIM(model_requested)) = 'MONTANA'                               THEN 'MONTANA'
+    WHEN UPPER(TRIM(model_requested)) = 'S10'                                   THEN 'S10'
+    WHEN UPPER(TRIM(model_requested)) = 'TRAILBLAZER'                           THEN 'TRAILBLAZER'
+    WHEN UPPER(TRIM(model_requested)) = 'SILVERADO'                             THEN 'SILVERADO'
+    WHEN UPPER(TRIM(model_requested)) = 'CAPTIVA'                               THEN 'CAPTIVA'
     ELSE 'Otros'
 END
 """
 
 # ── Volvo ─────────────────────────────────────────────────────────────────────
-_VOLVO_MODEL_SQL = """
+_VOLVO_MODEL_SQL = f"""
 CASE
-    WHEN UPPER(TRIM(model_requested)) = 'EX30'                               THEN 'EX30'
-    WHEN UPPER(TRIM(model_requested)) = 'EX40'                               THEN 'EX40'
-    WHEN UPPER(TRIM(model_requested)) = 'EC40'                               THEN 'EC40'
-    WHEN UPPER(TRIM(model_requested)) IN ('NEW XC60', 'XC60', 'XC 60')      THEN 'NEW XC60'
-    WHEN UPPER(TRIM(model_requested)) IN ('NEW XC90', 'XC90', 'XC 90')      THEN 'NEW XC90'
-    WHEN UPPER(TRIM(model_requested)) = 'EX90'                               THEN 'EX90'
-    ELSE 'Otros'
-END
-"""
-
-# ── Mazda ─────────────────────────────────────────────────────────────────────
-_MAZDA_MODEL_SQL = """
-CASE
-    WHEN UPPER(TRIM(model_requested)) IN ('CX-30', 'CX30', 'CX 30') THEN 'CX-30'
-    WHEN UPPER(TRIM(model_requested)) IN ('CX-5',  'CX5',  'CX 5')  THEN 'CX-5'
-    WHEN UPPER(TRIM(model_requested)) IN ('CX-60', 'CX60', 'CX 60') THEN 'CX-60'
-    WHEN UPPER(TRIM(model_requested)) IN ('CX-90', 'CX90', 'CX 90') THEN 'CX-90'
-    WHEN UPPER(TRIM(model_requested)) IN ('BT-50', 'BT50', 'BT 50') THEN 'BT-50'
+    {_NULL_CLAUSE}
+    WHEN UPPER(TRIM(model_requested)) = 'EX30'                              THEN 'EX30'
+    WHEN UPPER(TRIM(model_requested)) = 'EX40'                              THEN 'EX40'
+    WHEN UPPER(TRIM(model_requested)) = 'EC40'                              THEN 'EC40'
+    WHEN UPPER(TRIM(model_requested)) IN ('NEW XC60', 'XC60', 'XC 60')     THEN 'NEW XC60'
+    WHEN UPPER(TRIM(model_requested)) IN ('NEW XC90', 'XC90', 'XC 90')     THEN 'NEW XC90'
+    WHEN UPPER(TRIM(model_requested)) = 'EX90'                              THEN 'EX90'
     ELSE 'Otros'
 END
 """
 
 # Generic fallback — uses raw model_requested, just trims whitespace
-_DEFAULT_MODEL_SQL = "COALESCE(NULLIF(TRIM(model_requested), ''), 'Otros')"
+_DEFAULT_MODEL_SQL = f"""
+CASE
+    {_NULL_CLAUSE}
+    ELSE COALESCE(NULLIF(TRIM(model_requested), ''), 'Sin modelo')
+END
+"""
 
 # ── Brand registry ────────────────────────────────────────────────────────────
 # Keys are used as URL paths: /kia, /bmw, /nissan, etc.
