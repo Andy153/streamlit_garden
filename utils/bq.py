@@ -1,21 +1,27 @@
-import functools
+import json
 import pandas as pd
 import streamlit as st
 from google.cloud import bigquery
+from google.oauth2 import service_account
 
 PROJECT = "vx-operation"
 
 
 @st.cache_resource(show_spinner=False)
 def get_client() -> bigquery.Client:
-    return bigquery.Client(project=PROJECT)
+    try:
+        secret = st.secrets["gcp_service_account_json"]
+        info = json.loads(secret)
+        creds = service_account.Credentials.from_service_account_info(
+            info,
+            scopes=["https://www.googleapis.com/auth/cloud-platform"],
+        )
+        return bigquery.Client(project=PROJECT, credentials=creds)
+    except Exception:
+        # Local: usa Application Default Credentials (gcloud auth)
+        return bigquery.Client(project=PROJECT)
 
 
-def run_query(sql: str, ttl: int = 300) -> pd.DataFrame:
-    """Execute a BigQuery SQL query and return a DataFrame. Results cached by default 5 min."""
-    @st.cache_data(ttl=ttl, show_spinner="Consultando BigQuery...")
-    def _query(sql: str) -> pd.DataFrame:
-        client = get_client()
-        return client.query(sql).to_dataframe()
-
-    return _query(sql)
+@st.cache_data(ttl=300, show_spinner="Consultando BigQuery...")
+def run_query(sql: str) -> pd.DataFrame:
+    return get_client().query(sql).to_dataframe()

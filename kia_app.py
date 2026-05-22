@@ -199,8 +199,8 @@ SELECT
   origen_lead
 FROM `vx-operation.garden_kia.cio_people_data_with_attributes`
 WHERE gochat_users_ns IS NOT NULL
-  AND DATE(_created_at, 'America/Asuncion')
-      BETWEEN '{start_date.isoformat()}' AND '{end_date.isoformat()}'
+  AND _created_at >= TIMESTAMP('{start_date.isoformat()}', 'America/Asuncion')
+  AND _created_at <  TIMESTAMP(DATE_ADD(DATE '{end_date.isoformat()}', INTERVAL 1 DAY), 'America/Asuncion')
 """
 
 df = run_query(SQL)
@@ -346,6 +346,9 @@ bar_colors   = (
     if sel_c else _base_colors
 )
 
+y_tops  = [b + v for b, v in zip(bases + [0], values + [total_val])]
+y_range = max(y_tops) * 1.18 if y_tops else 100
+
 fig_wf = go.Figure(go.Bar(
     x=_all_labels,
     y=values + [total_val],
@@ -354,6 +357,7 @@ fig_wf = go.Figure(go.Bar(
     marker_line_width=0,
     text=[f"{v:,}" for v in values] + [f"{total_val:,}"],
     textposition="outside",
+    cliponaxis=False,
     showlegend=False,
     hovertemplate="<b>%{x}</b><br>Leads: %{y:,}<extra></extra>",
     selected=dict(marker=dict(opacity=1)),
@@ -361,12 +365,13 @@ fig_wf = go.Figure(go.Bar(
 ))
 fig_wf.update_layout(
     showlegend    = False,
-    height        = 420,
-    margin        = dict(t=40, b=10, l=60, r=80),
+    height        = 440,
+    margin        = dict(t=50, b=10, l=60, r=80),
     plot_bgcolor  = "rgba(0,0,0,0)",
     paper_bgcolor = "rgba(0,0,0,0)",
     xaxis         = dict(showgrid=False, tickfont=dict(size=13)),
-    yaxis         = dict(showgrid=True, gridcolor="#E8EAF0", title="Leads"),
+    yaxis         = dict(showgrid=True, gridcolor="#E8EAF0", title="Leads",
+                         range=[0, y_range]),
     dragmode      = False,
 )
 wf_event = st.plotly_chart(
@@ -407,6 +412,41 @@ def drilldown(df, sel_c):
     sel_m       = st.session_state.get("model_sel")
     sel_v       = st.session_state.get("vendor_sel") if show_vendor else None
 
+    # Accent animado al abrir el desglose
+    # Keyframe names únicos por clasificación para forzar retrigger en cada apertura
+    _aid = sel_c.replace(" ", "_")
+    st.markdown(f"""
+<style>
+@keyframes accentSlide_{_aid} {{
+    from {{ transform: scaleX(0); opacity: 0; }}
+    to   {{ transform: scaleX(1); opacity: 1; }}
+}}
+@keyframes fadeUp_{_aid} {{
+    from {{ opacity: 0; transform: translateY(10px); }}
+    to   {{ opacity: 1; transform: translateY(0); }}
+}}
+.drill-accent {{ transform-origin: left; animation: accentSlide_{_aid} 0.4s cubic-bezier(.22,.68,0,1.1) both; }}
+.drill-title  {{ animation: fadeUp_{_aid} 0.4s ease both; }}
+</style>
+<div class="drill-accent" style="
+    height: 3px;
+    background: linear-gradient(90deg, {accent} 0%, {accent}30 100%);
+    border-radius: 2px;
+    margin-bottom: 10px;
+"></div>
+<div class="drill-title" style="
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    margin-bottom: 4px;
+    font-family: Inter, sans-serif;
+">
+    <span style="font-size:26px;font-weight:800;color:{accent};letter-spacing:-0.3px">{sel_c}</span>
+    <span style="color:#CFD8DC;font-size:22px;font-weight:300">·</span>
+    <span style="font-size:22px;font-weight:700;color:#1A1A2E">{len(df_c):,} leads</span>
+</div>
+""", unsafe_allow_html=True)
+
     # Migas + botón limpiar (solo cuando hay modelo o vendedor activo)
     if sel_m or sel_v:
         crumbs = [sel_c]
@@ -420,8 +460,6 @@ def drilldown(df, sel_c):
                 st.session_state.pop("model_sel",  None)
                 st.session_state.pop("vendor_sel", None)
                 st.rerun()
-
-    st.markdown(f"### {sel_c} &nbsp;·&nbsp; {len(df_c):,} leads")
 
     cols = st.columns(2 if show_vendor else 1)
     col1 = cols[0]
@@ -438,13 +476,15 @@ def drilldown(df, sel_c):
             x=mc["n"], y=mc["modelo"], orientation="h",
             marker_color=mc_colors, marker_line_width=0,
             text=mc["n"], textposition="outside",
+            cliponaxis=False,
             hovertemplate="<b>%{y}</b><br>%{x:,} leads<extra></extra>",
         ))
         fig_m.update_layout(
             title="Por Modelo", height=max(300, len(mc) * 34),
-            margin=dict(t=40, b=20, l=20, r=70),
+            margin=dict(t=40, b=20, l=20, r=90),
             plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(255,255,255,0)",
-            xaxis=dict(showgrid=True, gridcolor="#E8EAF0"),
+            xaxis=dict(showgrid=True, gridcolor="#E8EAF0",
+                       range=[0, mc["n"].max() * 1.25] if not mc.empty else None),
             yaxis=dict(showgrid=False),
             dragmode=False,
         )
@@ -472,13 +512,15 @@ def drilldown(df, sel_c):
                 x=vc["n"], y=vc["vendedor"], orientation="h",
                 marker_color=vc_colors, marker_line_width=0,
                 text=vc["n"], textposition="outside",
+                cliponaxis=False,
                 hovertemplate="<b>%{y}</b><br>%{x:,} leads<extra></extra>",
             ))
             fig_v.update_layout(
                 title="Por Vendedor", height=max(300, len(vc) * 34),
-                margin=dict(t=40, b=20, l=20, r=70),
+                margin=dict(t=40, b=20, l=20, r=90),
                 plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(255,255,255,0)",
-                xaxis=dict(showgrid=True, gridcolor="#E8EAF0"),
+                xaxis=dict(showgrid=True, gridcolor="#E8EAF0",
+                           range=[0, vc["n"].max() * 1.25] if not vc.empty else None),
                 yaxis=dict(showgrid=False),
                 dragmode=False,
             )
