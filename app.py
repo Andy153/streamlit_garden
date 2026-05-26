@@ -1,4 +1,4 @@
-"""Garden Dashboard — multi-brand entry point.
+"""Garden Dashboard — multi-brand entry point. v2
 
 URL paths: /kia  /bmw  /chery  /chevrolet  /fiat  /jeep  /mazda  /mini  /nissan  /volvo
 Each brand requires its own password (set in .streamlit/secrets.toml).
