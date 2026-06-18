@@ -69,8 +69,9 @@ def build_query(dataset: str, has_objecion: bool, has_actitud: bool, large_table
     # Brands with a non-standard event (e.g. Volvo's envio_meet_drive) never got
     # promo_aceptada set, so we include everyone who received the event.
     filter_aceptados = (difusion_event == "envio_promo_difusion_preaprobados")
-    aceptados_cte = (
-        f"""aceptados AS (
+    if filter_aceptados:
+        # Standard brands: only include users who explicitly accepted the promo
+        aceptados_cte = f"""aceptados AS (
   SELECT DISTINCT internal_customer_id
   FROM `vx-operation.{dataset}.cio_people_data_with_attributes`
   WHERE LOWER(TRIM(CAST(promo_aceptada AS STRING))) = 'true'
@@ -78,14 +79,18 @@ def build_query(dataset: str, has_objecion: bool, has_actitud: bool, large_table
 ),
 
 """
-        if filter_aceptados
-        else ""
-    )
-    aceptados_join = (
-        "INNER JOIN aceptados ac\n  ON d.internal_customer_id = ac.internal_customer_id"
-        if filter_aceptados
-        else ""
-    )
+    else:
+        # Non-standard event brands (e.g. Volvo): the difusion event name differs, so
+        # promo_aceptada was never set. Use the promo attribute alone to identify the
+        # intended users and filter out unrelated events with the same event name.
+        aceptados_cte = f"""aceptados AS (
+  SELECT DISTINCT internal_customer_id
+  FROM `vx-operation.{dataset}.cio_people_data_with_attributes`
+  WHERE LOWER(TRIM(CAST(promo AS STRING))) = 'difusion_preaprobados'
+),
+
+"""
+    aceptados_join = "INNER JOIN aceptados ac\n  ON d.internal_customer_id = ac.internal_customer_id"
     atributos_where = (
         "\n  WHERE internal_customer_id IN (SELECT internal_customer_id FROM aceptados)"
         if large_table and filter_aceptados
