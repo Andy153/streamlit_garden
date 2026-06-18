@@ -1,6 +1,7 @@
 """Garden Dashboard — multi-brand entry point. v2
 
 URL paths: /kia  /bmw  /chery  /chevrolet  /fiat  /jeep  /mazda  /mini  /nissan  /volvo
+           /difusiones
 Each brand requires its own password (set in .streamlit/secrets.toml).
 """
 import streamlit as st
@@ -31,6 +32,10 @@ pages = [
     st.Page(_make_page(key), title=cfg["title"], url_path=key)
     for key, cfg in BRANDS.items()
 ]
+
+pages.append(
+    st.Page("difusiones_app.py", title="Difusiones Preaprobados", url_path="difusiones")
+)
 
 nav = st.navigation(pages, position="hidden")
 nav.run()
