@@ -302,8 +302,9 @@ def render() -> None:
             st.session_state.pop("dif_last_refresh", None)
             st.rerun()
 
+        last_refresh_placeholder = st.empty()
         if "dif_last_refresh" in st.session_state:
-            st.caption(f"Última actualización: {st.session_state['dif_last_refresh']}")
+            last_refresh_placeholder.caption(f"Última actualización: {st.session_state['dif_last_refresh']}")
 
     # ─── Header ──────────────────────────────────────────────────────────────
 
@@ -349,7 +350,7 @@ def render() -> None:
     if dfs and "dif_last_refresh" not in st.session_state:
         from datetime import datetime
         st.session_state["dif_last_refresh"] = datetime.now().strftime("%d/%m/%Y %H:%M")
-        st.rerun()
+        last_refresh_placeholder.caption(f"Última actualización: {st.session_state['dif_last_refresh']}")
 
     if load_errors:
         with st.expander(f":material/warning: {len(load_errors)} error(es) al cargar"):
