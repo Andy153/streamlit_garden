@@ -370,7 +370,7 @@ def render() -> None:
     pct_resp = respondio_count / total * 100 if total else 0
     no_comercial_count = int((df["respondio_agente"] == 0).sum())
     pct_no_comercial = no_comercial_count / total * 100 if total else 0
-    sin_resp_count = int((df["bucket_respuesta"] == "Sin respuesta").sum())
+    sin_resp_count = int(df["minutos_habiles_respuesta_todos"].isna().sum())
     pct_sin = sin_resp_count / total * 100 if total else 0
 
     with_time = df[df["minutos_habiles_respuesta_todos"].notna()]
