@@ -33,8 +33,9 @@ pages = [
     for key, cfg in BRANDS.items()
 ]
 
+from difusiones_app import render as _render_difusiones
 pages.append(
-    st.Page("difusiones_app.py", title="Difusiones Preaprobados", url_path="difusiones")
+    st.Page(_render_difusiones, title="Difusiones Preaprobados", url_path="difusiones")
 )
 
 nav = st.navigation(pages, position="hidden")
