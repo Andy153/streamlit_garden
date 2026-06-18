@@ -234,9 +234,17 @@ def load_total_sent(brand: str) -> int:
     dataset = BRANDS[brand]["dataset"]
     query = f"""
     SELECT COUNT(DISTINCT internal_customer_id) AS total
-    FROM `vx-operation.{dataset}.cio_events`
-    WHERE timestamp >= TIMESTAMP('2026-01-01')
-      AND name = 'envio_promo_difusion_preaprobados'
+    FROM (
+      SELECT internal_customer_id
+      FROM `vx-operation.{dataset}.cio_people_data_with_attributes`
+      WHERE LOWER(TRIM(CAST(promo AS STRING))) = 'difusion_preaprobados'
+      UNION DISTINCT
+      SELECT internal_customer_id
+      FROM `vx-operation.{dataset}.cio_events`
+      WHERE name = 'gochat_outbound_promo_template_message_failed'
+        AND timestamp >= TIMESTAMP('2026-01-01')
+        AND JSON_VALUE(data, '$.message_template') = 'difusion_preaprobados'
+    )
     """
     client = get_client()
     rows = client.query_and_wait(query)
