@@ -349,7 +349,8 @@ def render() -> None:
 
     if dfs and "dif_last_refresh" not in st.session_state:
         from datetime import datetime
-        st.session_state["dif_last_refresh"] = datetime.now().strftime("%d/%m/%Y %H:%M")
+        from zoneinfo import ZoneInfo
+        st.session_state["dif_last_refresh"] = datetime.now(ZoneInfo("America/Asuncion")).strftime("%d/%m/%Y %H:%M")
         last_refresh_placeholder.caption(f"Última actualización: {st.session_state['dif_last_refresh']}")
 
     if load_errors:
