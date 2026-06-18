@@ -400,9 +400,9 @@ def render() -> None:
             border=True,
         )
         st.metric(
-            "Tiempo promedio (hs hábiles)",
-            f"{avg_h:.1f} h",
-            f"mediana {med_h:.1f} h",
+            "Tiempo mediana (hs hábiles)",
+            f"{med_h:.1f} h",
+            f"promedio {avg_h:.1f} h",
             border=True,
             help="Incluye respuestas de agentes comerciales y no comerciales",
         )
