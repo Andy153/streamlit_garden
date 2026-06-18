@@ -373,9 +373,9 @@ def render() -> None:
     sin_resp_count = int(df["minutos_habiles_respuesta_todos"].isna().sum())
     pct_sin = sin_resp_count / total * 100 if total else 0
 
-    with_time = df[df["minutos_habiles_respuesta_todos"].notna()]
-    avg_h = with_time["minutos_habiles_respuesta_todos"].mean() / 60 if not with_time.empty else 0
-    med_h = with_time["minutos_habiles_respuesta_todos"].median() / 60 if not with_time.empty else 0
+    with_time = df[df["minutos_habiles_respuesta"].notna()]
+    avg_h = with_time["minutos_habiles_respuesta"].mean() / 60 if not with_time.empty else 0
+    med_h = with_time["minutos_habiles_respuesta"].median() / 60 if not with_time.empty else 0
 
     with st.container(horizontal=True):
         st.metric("Total difundidos", f"{total:,}", border=True)
@@ -404,7 +404,7 @@ def render() -> None:
             f"{avg_h:.1f} h",
             f"mediana {med_h:.1f} h",
             border=True,
-            help="Incluye respuestas de agentes no comerciales",
+            help="Solo respuestas de agentes comerciales",
         )
 
     st.space("medium")
