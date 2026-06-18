@@ -229,11 +229,27 @@ def load_brand_data(brand: str, query_hash: str) -> pd.DataFrame:
     return df
 
 
-def _load_brand_task(brand: str) -> tuple[str, pd.DataFrame]:
+@st.cache_data(ttl=3600, show_spinner=False)
+def load_total_sent(brand: str) -> int:
+    dataset = BRANDS[brand]["dataset"]
+    query = f"""
+    SELECT COUNT(DISTINCT internal_customer_id) AS total
+    FROM `vx-operation.{dataset}.cio_events`
+    WHERE timestamp >= TIMESTAMP('2026-01-01')
+      AND name = 'envio_promo_difusion_preaprobados'
+    """
+    client = get_client()
+    rows = client.query_and_wait(query)
+    return int(rows.to_dataframe(create_bqstorage_client=False)["total"].iloc[0])
+
+
+def _load_brand_task(brand: str) -> tuple[str, pd.DataFrame, int]:
     cfg = BRANDS[brand]
     query = build_query(cfg["dataset"], cfg["has_objecion"], cfg["large_table"])
     query_hash = hashlib.md5(query.encode()).hexdigest()[:8]
-    return brand, load_brand_data(brand, query_hash)
+    df = load_brand_data(brand, query_hash)
+    total_sent = load_total_sent(brand)
+    return brand, df, total_sent
 
 
 def render() -> None:
@@ -319,6 +335,7 @@ def render() -> None:
     # ─── Carga de datos ──────────────────────────────────────────────────────
 
     dfs: list[pd.DataFrame] = []
+    total_enviados: int = 0
     load_errors: list[str] = []
 
     progress_bar = st.progress(0, text=f"Consultando BigQuery — 0 / {len(selected_brands)} marcas…")
@@ -337,8 +354,9 @@ def render() -> None:
                 text=f"Completado {brand} — {completed} / {len(selected_brands)} marcas…",
             )
             try:
-                _, df_brand = future.result()
+                _, df_brand, sent = future.result()
                 dfs.append(df_brand)
+                total_enviados += sent
             except Exception as exc:
                 load_errors.append(
                     f"**{brand}**: `{type(exc).__name__}` — {exc}\n\n"
@@ -378,8 +396,21 @@ def render() -> None:
     avg_h = with_time["minutos_habiles_respuesta_todos"].mean() / 60 if not with_time.empty else 0
     med_h = with_time["minutos_habiles_respuesta_todos"].median() / 60 if not with_time.empty else 0
 
+    pct_aceptados = total / total_enviados * 100 if total_enviados else 0
+
     with st.container(horizontal=True):
-        st.metric("Total difundidos", f"{total:,}", border=True)
+        st.metric(
+            "Total enviados",
+            f"{total_enviados:,}",
+            help="Todos los leads que recibieron la difusión, aceptaron o no",
+            border=True,
+        )
+        st.metric(
+            "Aceptaron promo",
+            f"{total:,}",
+            f"{pct_aceptados:.1f}% del total enviado",
+            border=True,
+        )
         st.metric(
             "Respondió agente comercial",
             f"{respondio_count:,}",
