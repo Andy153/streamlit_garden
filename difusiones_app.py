@@ -305,7 +305,7 @@ with st.sidebar:
 # ─── Header ───────────────────────────────────────────────────────────────────
 
 st.markdown("# :material/directions_car: Difusión Preaprobados")
-st.markdown("**Garden Automotive Paraguay** — Análisis multi-marca de campañas")
+st.markdown("**Garden Automotores Paraguay** — Análisis multi-marca de preaprobados")
 st.divider()
 
 if not selected_brands:
