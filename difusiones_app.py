@@ -296,10 +296,13 @@ with st.sidebar:
 
     st.divider()
 
+    if st.button(":material/refresh: Actualizar datos", use_container_width=True):
+        load_brand_data.clear()
+        st.session_state.pop("dif_last_refresh", None)
+        st.rerun()
+
     if "dif_last_refresh" in st.session_state:
         st.caption(f"Última actualización: {st.session_state['dif_last_refresh']}")
-    else:
-        st.caption("Datos desde 2026-01-01")
 
 
 # ─── Header ───────────────────────────────────────────────────────────────────
