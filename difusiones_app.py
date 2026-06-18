@@ -15,14 +15,15 @@ from utils.bq import get_client
 # ─── Configuración de marcas ──────────────────────────────────────────────────
 
 BRANDS: dict[str, dict] = {
-    "BMW":       {"dataset": "garden_bmw",       "has_objecion": True,  "has_actitud": True,  "large_table": False},
-    "FIAT":      {"dataset": "garden_fiat",      "has_objecion": True,  "has_actitud": True,  "large_table": False},
-    "Chevrolet": {"dataset": "garden_chevrolet", "has_objecion": True,  "has_actitud": True,  "large_table": False},
-    "KIA":       {"dataset": "garden_kia",       "has_objecion": False, "has_actitud": True,  "large_table": True},
-    "Nissan":    {"dataset": "garden_nissan",    "has_objecion": True,  "has_actitud": True,  "large_table": True},
-    "Mazda":     {"dataset": "garden_mazda",     "has_objecion": True,  "has_actitud": True,  "large_table": False},
-    "Jeep/RAM":  {"dataset": "garden_jeep",      "has_objecion": True,  "has_actitud": True,  "large_table": False},
-    "MINI":      {"dataset": "garden_mini",      "has_objecion": True,  "has_actitud": True,  "large_table": False},
+    "BMW":       {"dataset": "garden_bmw",       "has_objecion": True,  "has_actitud": True,  "large_table": False, "difusion_event": "envio_promo_difusion_preaprobados"},
+    "FIAT":      {"dataset": "garden_fiat",      "has_objecion": True,  "has_actitud": True,  "large_table": False, "difusion_event": "envio_promo_difusion_preaprobados"},
+    "Chevrolet": {"dataset": "garden_chevrolet", "has_objecion": True,  "has_actitud": True,  "large_table": False, "difusion_event": "envio_promo_difusion_preaprobados"},
+    "KIA":       {"dataset": "garden_kia",       "has_objecion": False, "has_actitud": True,  "large_table": True,  "difusion_event": "envio_promo_difusion_preaprobados"},
+    "Nissan":    {"dataset": "garden_nissan",    "has_objecion": True,  "has_actitud": True,  "large_table": True,  "difusion_event": "envio_promo_difusion_preaprobados"},
+    "Mazda":     {"dataset": "garden_mazda",     "has_objecion": True,  "has_actitud": True,  "large_table": False, "difusion_event": "envio_promo_difusion_preaprobados"},
+    "Jeep/RAM":  {"dataset": "garden_jeep",      "has_objecion": True,  "has_actitud": True,  "large_table": False, "difusion_event": "envio_promo_difusion_preaprobados"},
+    "MINI":      {"dataset": "garden_mini",      "has_objecion": True,  "has_actitud": True,  "large_table": False, "difusion_event": "envio_promo_difusion_preaprobados"},
+    "Volvo":     {"dataset": "garden_volvo",     "has_objecion": False, "has_actitud": False, "large_table": False, "difusion_event": "envio_meet_drive"},
 }
 
 EXCLUDED_AGENTS = [
@@ -52,7 +53,7 @@ BUCKET_COLORS = {
 
 # ─── SQL Builder ──────────────────────────────────────────────────────────────
 
-def build_query(dataset: str, has_objecion: bool, has_actitud: bool, large_table: bool) -> str:
+def build_query(dataset: str, has_objecion: bool, has_actitud: bool, large_table: bool, difusion_event: str) -> str:
     excluded_list = ", ".join(f"'{a}'" for a in EXCLUDED_AGENTS)
     objecion_col = (
         "a.objecion_preaprobacion"
@@ -84,7 +85,7 @@ primera_difusion AS (
     DATETIME(MIN(timestamp), 'America/Argentina/Buenos_Aires') AS ts_difusion_ar
   FROM `vx-operation.{dataset}.cio_events`
   WHERE timestamp >= TIMESTAMP('2026-01-01')
-    AND name = 'envio_promo_difusion_preaprobados'
+    AND name = '{difusion_event}'
   GROUP BY internal_customer_id
 ),
 
@@ -222,7 +223,7 @@ LEFT JOIN minutos_habiles_todos mt
 @st.cache_data(ttl=3600, show_spinner=False)
 def load_brand_data(brand: str, query_hash: str) -> pd.DataFrame:
     cfg = BRANDS[brand]
-    query = build_query(cfg["dataset"], cfg["has_objecion"], cfg["has_actitud"], cfg["large_table"])
+    query = build_query(cfg["dataset"], cfg["has_objecion"], cfg["has_actitud"], cfg["large_table"], cfg["difusion_event"])
     client = get_client()
     try:
         rows = client.query_and_wait(query)
@@ -258,7 +259,7 @@ def load_total_sent(brand: str) -> int:
 
 def _load_brand_task(brand: str) -> tuple[str, pd.DataFrame, int]:
     cfg = BRANDS[brand]
-    query = build_query(cfg["dataset"], cfg["has_objecion"], cfg["has_actitud"], cfg["large_table"])
+    query = build_query(cfg["dataset"], cfg["has_objecion"], cfg["has_actitud"], cfg["large_table"], cfg["difusion_event"])
     query_hash = hashlib.md5(query.encode()).hexdigest()[:8]
     df = load_brand_data(brand, query_hash)
     total_sent = load_total_sent(brand)
