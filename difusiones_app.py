@@ -349,6 +349,7 @@ def render() -> None:
     if dfs and "dif_last_refresh" not in st.session_state:
         from datetime import datetime
         st.session_state["dif_last_refresh"] = datetime.now().strftime("%d/%m/%Y %H:%M")
+        st.rerun()
 
     if load_errors:
         with st.expander(f":material/warning: {len(load_errors)} error(es) al cargar"):
