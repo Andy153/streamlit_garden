@@ -23,7 +23,6 @@ BRANDS: dict[str, dict] = {
     "Mazda":     {"dataset": "garden_mazda",     "has_objecion": True,  "has_actitud": True,  "large_table": False},
     "Jeep/RAM":  {"dataset": "garden_jeep",      "has_objecion": True,  "has_actitud": True,  "large_table": False},
     "MINI":      {"dataset": "garden_mini",      "has_objecion": True,  "has_actitud": True,  "large_table": False},
-    "Volvo":     {"dataset": "garden_volvo",     "has_objecion": False, "has_actitud": False, "large_table": False},
 }
 
 EXCLUDED_AGENTS = [
