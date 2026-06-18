@@ -530,7 +530,7 @@ def render() -> None:
                                     domain=["Con respuesta", "Sin respuesta"],
                                     range=["#22c55e", "#6b7280"],
                                 ),
-                                legend=alt.Legend(title=None, orient="bottom"),
+                                legend=alt.Legend(title=None, orient="right"),
                             ),
                             order=alt.Order("estado:N", sort="descending"),
                             tooltip=[
@@ -861,7 +861,7 @@ def render() -> None:
                             theta=alt.Theta("count:Q"),
                             color=alt.Color(
                                 "actitud:N",
-                                legend=alt.Legend(title=None, orient="bottom"),
+                                legend=alt.Legend(title=None, orient="right"),
                             ),
                             tooltip=[
                                 alt.Tooltip("actitud:N", title="Actitud"),
@@ -888,7 +888,7 @@ def render() -> None:
                             theta=alt.Theta("count:Q"),
                             color=alt.Color(
                                 "objecion:N",
-                                legend=alt.Legend(title=None, orient="bottom"),
+                                legend=alt.Legend(title=None, orient="right"),
                             ),
                             tooltip=[
                                 alt.Tooltip("objecion:N", title="Objeción"),
