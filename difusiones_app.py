@@ -274,6 +274,10 @@ def render() -> None:
 
         if "dif_brand_selection" not in st.session_state:
             st.session_state["dif_brand_selection"] = {b: True for b in all_brand_keys}
+        else:
+            for _b in all_brand_keys:
+                if _b not in st.session_state["dif_brand_selection"]:
+                    st.session_state["dif_brand_selection"][_b] = True
 
         label = (
             "Todas las marcas"
