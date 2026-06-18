@@ -65,20 +65,34 @@ def build_query(dataset: str, has_objecion: bool, has_actitud: bool, large_table
         if has_actitud
         else "NULL AS actitud_preaprobacion"
     )
-    atributos_where = (
-        "\n  WHERE internal_customer_id IN (SELECT internal_customer_id FROM aceptados)"
-        if large_table
-        else ""
-    )
-    return f"""
-WITH aceptados AS (
+    # Only filter by promo_aceptada for brands using the standard difusion event.
+    # Brands with a non-standard event (e.g. Volvo's envio_meet_drive) never got
+    # promo_aceptada set, so we include everyone who received the event.
+    filter_aceptados = (difusion_event == "envio_promo_difusion_preaprobados")
+    aceptados_cte = (
+        f"""aceptados AS (
   SELECT DISTINCT internal_customer_id
   FROM `vx-operation.{dataset}.cio_people_data_with_attributes`
   WHERE LOWER(TRIM(CAST(promo_aceptada AS STRING))) = 'true'
     AND LOWER(TRIM(CAST(promo AS STRING))) = 'difusion_preaprobados'
 ),
 
-primera_difusion AS (
+"""
+        if filter_aceptados
+        else ""
+    )
+    aceptados_join = (
+        "INNER JOIN aceptados ac\n  ON d.internal_customer_id = ac.internal_customer_id"
+        if filter_aceptados
+        else ""
+    )
+    atributos_where = (
+        "\n  WHERE internal_customer_id IN (SELECT internal_customer_id FROM aceptados)"
+        if large_table and filter_aceptados
+        else ""
+    )
+    return f"""
+WITH {aceptados_cte}primera_difusion AS (
   SELECT
     internal_customer_id,
     MIN(timestamp)                                              AS ts_difusion_utc,
@@ -205,8 +219,7 @@ SELECT
   {actitud_col},
   a.etapa_funnel
 FROM primera_difusion d
-INNER JOIN aceptados ac
-  ON d.internal_customer_id = ac.internal_customer_id
+{aceptados_join}
 LEFT JOIN primera_respuesta r
   ON d.internal_customer_id = r.internal_customer_id
 LEFT JOIN atributos a
