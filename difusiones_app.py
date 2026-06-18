@@ -348,9 +348,10 @@ def render() -> None:
     progress_bar.empty()
 
     if dfs and "dif_last_refresh" not in st.session_state:
+        import pytz
         from datetime import datetime
-        from zoneinfo import ZoneInfo
-        st.session_state["dif_last_refresh"] = datetime.now(ZoneInfo("America/Asuncion")).strftime("%d/%m/%Y %H:%M")
+        tz_py = pytz.timezone("America/Asuncion")
+        st.session_state["dif_last_refresh"] = datetime.now(tz_py).strftime("%d/%m/%Y %H:%M")
         last_refresh_placeholder.caption(f"Última actualización: {st.session_state['dif_last_refresh']}")
 
     if load_errors:
