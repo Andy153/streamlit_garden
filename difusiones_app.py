@@ -15,15 +15,15 @@ from utils.bq import get_client
 # ─── Configuración de marcas ──────────────────────────────────────────────────
 
 BRANDS: dict[str, dict] = {
-    "BMW":       {"dataset": "garden_bmw",       "has_objecion": True,  "large_table": False},
-    "FIAT":      {"dataset": "garden_fiat",      "has_objecion": True,  "large_table": False},
-    "Chevrolet": {"dataset": "garden_chevrolet", "has_objecion": True,  "large_table": False},
-    "KIA":       {"dataset": "garden_kia",       "has_objecion": False, "large_table": True},
-    "Nissan":    {"dataset": "garden_nissan",    "has_objecion": True,  "large_table": True},
-    "Mazda":     {"dataset": "garden_mazda",     "has_objecion": True,  "large_table": False},
-    "Jeep/RAM":  {"dataset": "garden_jeep",      "has_objecion": True,  "large_table": False},
-    "MINI":      {"dataset": "garden_mini",      "has_objecion": True,  "large_table": False},
-    "Volvo":     {"dataset": "garden_volvo",     "has_objecion": False, "large_table": False},
+    "BMW":       {"dataset": "garden_bmw",       "has_objecion": True,  "has_actitud": True,  "large_table": False},
+    "FIAT":      {"dataset": "garden_fiat",      "has_objecion": True,  "has_actitud": True,  "large_table": False},
+    "Chevrolet": {"dataset": "garden_chevrolet", "has_objecion": True,  "has_actitud": True,  "large_table": False},
+    "KIA":       {"dataset": "garden_kia",       "has_objecion": False, "has_actitud": True,  "large_table": True},
+    "Nissan":    {"dataset": "garden_nissan",    "has_objecion": True,  "has_actitud": True,  "large_table": True},
+    "Mazda":     {"dataset": "garden_mazda",     "has_objecion": True,  "has_actitud": True,  "large_table": False},
+    "Jeep/RAM":  {"dataset": "garden_jeep",      "has_objecion": True,  "has_actitud": True,  "large_table": False},
+    "MINI":      {"dataset": "garden_mini",      "has_objecion": True,  "has_actitud": True,  "large_table": False},
+    "Volvo":     {"dataset": "garden_volvo",     "has_objecion": False, "has_actitud": False, "large_table": False},
 }
 
 EXCLUDED_AGENTS = [
@@ -53,12 +53,17 @@ BUCKET_COLORS = {
 
 # ─── SQL Builder ──────────────────────────────────────────────────────────────
 
-def build_query(dataset: str, has_objecion: bool, large_table: bool) -> str:
+def build_query(dataset: str, has_objecion: bool, has_actitud: bool, large_table: bool) -> str:
     excluded_list = ", ".join(f"'{a}'" for a in EXCLUDED_AGENTS)
     objecion_col = (
         "a.objecion_preaprobacion"
         if has_objecion
         else "NULL AS objecion_preaprobacion"
+    )
+    actitud_col = (
+        "a.actitud_preaprobacion"
+        if has_actitud
+        else "NULL AS actitud_preaprobacion"
     )
     atributos_where = (
         "\n  WHERE internal_customer_id IN (SELECT internal_customer_id FROM aceptados)"
@@ -197,7 +202,7 @@ SELECT
     ELSE                            '> 4 horas'
   END                                                 AS bucket_respuesta,
   {objecion_col},
-  a.actitud_preaprobacion,
+  {actitud_col},
   a.etapa_funnel
 FROM primera_difusion d
 INNER JOIN aceptados ac
@@ -218,7 +223,7 @@ LEFT JOIN minutos_habiles_todos mt
 @st.cache_data(ttl=3600, show_spinner=False)
 def load_brand_data(brand: str, query_hash: str) -> pd.DataFrame:
     cfg = BRANDS[brand]
-    query = build_query(cfg["dataset"], cfg["has_objecion"], cfg["large_table"])
+    query = build_query(cfg["dataset"], cfg["has_objecion"], cfg["has_actitud"], cfg["large_table"])
     client = get_client()
     try:
         rows = client.query_and_wait(query)
@@ -254,7 +259,7 @@ def load_total_sent(brand: str) -> int:
 
 def _load_brand_task(brand: str) -> tuple[str, pd.DataFrame, int]:
     cfg = BRANDS[brand]
-    query = build_query(cfg["dataset"], cfg["has_objecion"], cfg["large_table"])
+    query = build_query(cfg["dataset"], cfg["has_objecion"], cfg["has_actitud"], cfg["large_table"])
     query_hash = hashlib.md5(query.encode()).hexdigest()[:8]
     df = load_brand_data(brand, query_hash)
     total_sent = load_total_sent(brand)
